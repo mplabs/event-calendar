@@ -237,17 +237,18 @@ shippable, useful site.
 
 ---
 
-## 11. Open decisions (need your input)
+## 11. Decisions (locked)
 
-1. **Stack:** all-TypeScript (recommended) vs. a Python scraping service?
-2. **Hosting/deploy target:** Vercel + hosted Postgres (Neon/Supabase),
-   a single VPS with Docker, or something you already use?
-3. **Scope of "region":** just Jena, or include Weimar / Erfurt / wider
-   Thuringia from the start? (affects source list + a `region` field — already
-   in the model.)
-4. **Source shortlist:** which venues/aggregators are must-haves for v1? (e.g.
-   Kassablanca, F-Haus, Volksbad, Theaterhaus Jena, Paradies/Café Wagner,
-   Uni Jena events, stadt jena event calendar, plus any regional aggregators.)
+1. **Stack:** TypeScript **+** Python. Python owns the ingestion service
+   (fetch → LLM extract → normalize → dedupe → store); TypeScript/Next.js owns
+   the API + web UI. They share one Postgres. DB schema is the contract between
+   them — owned by SQL migrations in `db/migrations` so neither side drifts.
+2. **Hosting:** single VPS, everything in Docker Compose (postgres + scraper +
+   web). No managed cloud dependency.
+3. **Region for v1:** Jena, Weimar, Apolda. `region` field carries the value;
+   sources are tagged per city.
+4. **First sources:** a vertical slice — one feed source (RSS/iCal) + one HTML
+   venue — to prove the whole pipeline end-to-end before scaling breadth.
 
 ---
 

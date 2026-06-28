@@ -1,0 +1,51 @@
+# Source registry. One entry per source. The pipeline is config-driven so most
+# sources need no code. Verify the `legal` block (robots.txt / ToS / contact)
+# before enabling a source in production.
+#
+# fetch.type:
+#   feed     -> RSS or iCal feed (cheap, reliable; always prefer if available)
+#   html     -> static HTML page (fetched with httpx, cleaned, sent to the LLM)
+#   headless -> JS-rendered page (Playwright)  [Phase 3]
+#   json-api -> documented JSON API            [Phase 3]
+
+sources:
+  # --- Vertical-slice source #1: a FEED source -------------------------------
+  # Placeholder URL — swap for a real Jena/Weimar/Apolda RSS or iCal feed and
+  # confirm the legal block before enabling.
+  - id: example-feed
+    name: Example Feed Source
+    region: jena
+    enabled: false
+    fetch:
+      type: feed
+      url: https://example.org/events.ics
+    schedule: "0 6 * * *"
+    legal:
+      robots_ok: true
+      feed: true
+      rate_limit_s: 5
+      contact: "TODO"
+
+  # --- Vertical-slice source #2: an HTML venue -------------------------------
+  - id: example-venue
+    name: Example Venue
+    region: jena
+    enabled: false
+    fetch:
+      type: html
+      url: https://example.org/programm
+      # Optional hint to narrow the content sent to the LLM. The extractor works
+      # without it, but a good selector cuts tokens and noise.
+      content_selector: "main"
+    schedule: "0 6 * * *"
+    legal:
+      robots_ok: true
+      feed: false
+      rate_limit_s: 5
+      contact: "TODO"
+
+# Candidate real sources to slot in (verify legal first):
+#   Jena:   Kassablanca, F-Haus, Café Wagner / Paradies, Volksbad,
+#           Theaterhaus Jena, Stadt Jena event calendar, Uni Jena (FSU)
+#   Weimar: weimar.de event calendar, mon ami, Lichthaus Kino, e-werk
+#   Apolda: apolda.de event calendar, Kunsthaus Apolda

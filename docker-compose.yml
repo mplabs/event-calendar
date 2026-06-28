@@ -1,0 +1,67 @@
+# Single-VPS deployment. Bring up the DB + apply migrations, then run the
+# scraper on demand or via cron (see the `scrape` profile below).
+#
+#   cp .env.example .env   # then edit secrets
+#   docker compose up -d db
+#   docker compose run --rm migrate
+#   docker compose run --rm scraper run-source kassablanca
+#
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-shot: apply SQL migrations in db/migrations in lexical order.
+  migrate:
+    image: postgres:16
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./db/migrations:/migrations:ro
+    entrypoint: >
+      bash -c 'for f in /migrations/*.sql; do
+        echo "applying $$f";
+        psql -h db -U ${POSTGRES_USER} -d ${POSTGRES_DB} -v ON_ERROR_STOP=1 -f "$$f";
+      done'
+
+  # Python ingestion service. `command` is passed to the eventscraper CLI.
+  scraper:
+    build: ./services/scraper
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    volumes:
+      - ./sources.yaml:/app/sources.yaml:ro
+      - raw_cache:/app/raw_cache
+    entrypoint: ["python", "-m", "eventscraper.cli"]
+    command: ["--help"]
+
+  # TypeScript / Next.js app (API + UI) — Phase 2, see services/web/README.md.
+  # web:
+  #   build: ./services/web
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   env_file: .env
+  #   ports:
+  #     - "3000:3000"
+
+volumes:
+  pgdata:
+  raw_cache:
