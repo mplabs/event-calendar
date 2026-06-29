@@ -6,6 +6,7 @@ from ..config import Source
 from .base import FetchResult
 from .feed import fetch_feed
 from .http import fetch_html
+from .sitemap import fetch_sitemap
 
 
 def fetch(source: Source) -> FetchResult:
@@ -14,7 +15,9 @@ def fetch(source: Source) -> FetchResult:
         return fetch_feed(source)
     if kind == "html":
         return fetch_html(source)
+    if kind == "sitemap":
+        return fetch_sitemap(source)
     raise NotImplementedError(f"fetch type not implemented yet: {kind}")
 
 
-__all__ = ["fetch", "FetchResult", "fetch_feed", "fetch_html"]
+__all__ = ["fetch", "FetchResult", "fetch_feed", "fetch_html", "fetch_sitemap"]

@@ -10,13 +10,26 @@ from .llm import LLMClient, get_default_client
 def extract(result: FetchResult, client: LLMClient | None = None) -> list[ExtractedEvent]:
     """Extract events from a fetch result.
 
-    Feed sources arrive pre-structured (kind="events") and skip the LLM.
-    HTML/text sources go through the LLM extractor.
+    kind="events"  -> pre-structured (feed); skip the LLM.
+    kind="pages"   -> list of {url, content} dicts (sitemap crawl); one LLM
+                      call per page, url propagated onto ExtractedEvent.
+    kind="text"    -> single HTML/text blob; one LLM call.
     """
     if result.kind == "events":
         return [ExtractedEvent(**_coerce(e)) for e in result.structured if e.get("title")]
 
     client = client or get_default_client()
+
+    if result.kind == "pages":
+        events: list[ExtractedEvent] = []
+        for page in result.structured:
+            page_events = client.extract_events(page["content"])
+            for ev in page_events:
+                if not ev.url:
+                    ev.url = page["url"]
+            events.extend(page_events)
+        return events
+
     return client.extract_events(result.content)
 
 

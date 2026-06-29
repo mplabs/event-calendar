@@ -31,8 +31,11 @@ class Settings:
 @dataclass
 class FetchConfig:
     type: str
-    url: str
+    url: str = ""
     content_selector: str | None = None
+    # sitemap fetch type extras
+    sitemap_url: str = ""
+    sitemap_filter: str = ""
 
 
 @dataclass

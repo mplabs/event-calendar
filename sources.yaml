@@ -3,49 +3,60 @@
 # before enabling a source in production.
 #
 # fetch.type:
-#   feed     -> RSS or iCal feed (cheap, reliable; always prefer if available)
+#   sitemap  -> TYPO3/similar: discover event URLs via sitemap, then fetch each
+#               static detail page. Set sitemap_url to the index sitemap.
 #   html     -> static HTML page (fetched with httpx, cleaned, sent to the LLM)
-#   headless -> JS-rendered page (Playwright)  [Phase 3]
-#   json-api -> documented JSON API            [Phase 3]
+#   feed     -> RSS or iCal feed (cheap, reliable; always prefer if available)
+#   headless -> JS-rendered page (Playwright) [Phase 3]
 
 sources:
-  # --- Vertical-slice source #1: a FEED source -------------------------------
-  # Placeholder URL — swap for a real Jena/Weimar/Apolda RSS or iCal feed and
-  # confirm the legal block before enabling.
-  - id: example-feed
-    name: Example Feed Source
+  # --- jena-veranstaltungen.de (JenaKultur official calendar) ----------------
+  # TYPO3 site. The listing page is JS-rendered (Vue component), but individual
+  # event detail pages ARE static server-side rendered HTML. Strategy: fetch
+  # sitemap.xml to discover all /event/<slug> URLs (with lastmod for change
+  # detection), then fetch each detail page for LLM extraction.
+  # robots.txt: Disallow: /fileadmin, /uploads — event pages NOT disallowed.
+  - id: jena-veranstaltungen
+    name: Veranstaltungskalender Jena (JenaKultur)
     region: jena
-    enabled: false
+    enabled: true
     fetch:
-      type: feed
-      url: https://example.org/events.ics
+      type: sitemap
+      # Stable entry point: the sitemap index always lists the event sub-sitemap.
+      sitemap_url: https://www.jena-veranstaltungen.de/sitemap.xml
+      # Event sub-sitemap is identified by this URL fragment (TYPO3 param).
+      sitemap_filter: ndsdestinationdataevent
+      # CSS selector to narrow LLM input on each event detail page.
+      content_selector: main
     schedule: "0 6 * * *"
     legal:
-      robots_ok: true
-      feed: true
-      rate_limit_s: 5
-      contact: "TODO"
+      robots_ok: true         # robots.txt disallows /fileadmin, /uploads only
+      feed: false
+      rate_limit_s: 3
+      contact: "https://www.jena-veranstaltungen.de/kontakt"
 
-  # --- Vertical-slice source #2: an HTML venue -------------------------------
-  - id: example-venue
-    name: Example Venue
+  # --- c-keller.de (C-Keller & Galerie Markt 21, Jena) ----------------------
+  # Old REDAXO CMS. No robots.txt (returns 404 → no Disallow rules in effect).
+  # No RSS/iCal. Konzerte page is static HTML with a simple date+title format:
+  #   "DD Mon\nTitle\nDescription\n[» link]"
+  - id: c-keller
+    name: C-Keller Jena
     region: jena
-    enabled: false
+    enabled: true
     fetch:
       type: html
-      url: https://example.org/programm
-      # Optional hint to narrow the content sent to the LLM. The extractor works
-      # without it, but a good selector cuts tokens and noise.
-      content_selector: "main"
-    schedule: "0 6 * * *"
+      url: https://www.c-keller.de/index.php?article_id=513
+      # col2_content contains the concert list with #cal date + #textumschluss title blocks.
+      content_selector: "#col2_content"
+    schedule: "0 7 * * *"
     legal:
-      robots_ok: true
+      robots_ok: true         # No robots.txt; treating as unrestricted
       feed: false
       rate_limit_s: 5
-      contact: "TODO"
+      contact: "https://www.c-keller.de/index.php?article_id=5"
 
-# Candidate real sources to slot in (verify legal first):
-#   Jena:   Kassablanca, F-Haus, Café Wagner / Paradies, Volksbad,
-#           Theaterhaus Jena, Stadt Jena event calendar, Uni Jena (FSU)
-#   Weimar: weimar.de event calendar, mon ami, Lichthaus Kino, e-werk
-#   Apolda: apolda.de event calendar, Kunsthaus Apolda
+  # Candidate sources to add next (verify legal + structure first):
+  #   Jena:   F-Haus, Café Wagner / Paradies, Volksbad,
+  #           Theaterhaus Jena, Uni Jena (FSU events), Kassablanca
+  #   Weimar: weimar.de event calendar, mon ami, Lichthaus Kino, e-werk
+  #   Apolda: apolda.de event calendar, Kunsthaus Apolda

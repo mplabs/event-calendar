@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="/typo3/sysext/seo/Resources/Public/CSS/Sitemap.xsl"?>
+
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    
+        <sitemap>
+            <loc>https://www.jena-veranstaltungen.de/?sitemap=ndsdestinationdataevent&amp;type=1533906435&amp;cHash=89f3589c7322dc1309ea79011519d039</loc>
+            <lastmod>2026-06-27T21:01:00+02:00</lastmod>
+        </sitemap>
+    
+        <sitemap>
+            <loc>https://www.jena-veranstaltungen.de/?sitemap=ndsdestinationdatapoi&amp;type=1533906435&amp;cHash=574a1375b5ad88a31939d0393ddb8138</loc>
+            <lastmod>2026-06-23T09:33:00+02:00</lastmod>
+        </sitemap>
+    
+        <sitemap>
+            <loc>https://www.jena-veranstaltungen.de/?sitemap=pages&amp;type=1533906435&amp;cHash=5e158780da9782f82f07fce12139faa5</loc>
+            <lastmod>2026-06-26T11:50:59+02:00</lastmod>
+        </sitemap>
+    
+</sitemapindex>
