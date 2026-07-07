@@ -16,25 +16,13 @@ import logging
 import xml.etree.ElementTree as ET
 from time import sleep
 
-import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential
-
 from ..config import Source
-from .base import USER_AGENT, FetchResult
-from .http import clean_html
+from .base import FetchResult
+from .http import _get, clean_html
 
 log = logging.getLogger(__name__)
 
 _NS = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
-
-
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, max=10))
-def _get(url: str) -> str:
-    resp = httpx.get(
-        url, headers={"User-Agent": USER_AGENT}, timeout=30, follow_redirects=True
-    )
-    resp.raise_for_status()
-    return resp.text
 
 
 def _find_event_sitemap(index_xml: str, filter_fragment: str) -> str | None:

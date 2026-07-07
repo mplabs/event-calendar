@@ -25,7 +25,7 @@ class RunResult:
     content_hash: str
 
 
-def run_source(source: Source, *, persist: bool = True, dry_run: bool = False) -> RunResult:
+def run_source(source: Source, *, dry_run: bool = False) -> RunResult:
     log.info("fetching %s (%s)", source.id, source.fetch.type)
     fetched = fetch(source)
 
@@ -42,7 +42,7 @@ def run_source(source: Source, *, persist: bool = True, dry_run: bool = False) -
     log.info("normalized=%d deduped=%d", len(normalized), len(deduped))
 
     stored = 0
-    if persist and not dry_run:
+    if not dry_run:
         from .store import store
 
         stored = store(deduped, source)

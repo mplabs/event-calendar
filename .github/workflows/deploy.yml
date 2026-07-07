@@ -1,0 +1,50 @@
+name: Test & Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e ".[dev]"
+        working-directory: services/scraper
+      - run: pytest tests/ -q
+        working-directory: services/scraper
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy files to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "."
+          target: ${{ vars.VPS_DEPLOY_PATH }}
+          # don't overwrite .env or wipe the postgres volume
+          overwrite: true
+          rm: false
+
+      - name: Build & run
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ vars.VPS_DEPLOY_PATH }}
+            docker compose build scraper
+            docker compose run --rm migrate
+            docker compose run --rm scraper run-all

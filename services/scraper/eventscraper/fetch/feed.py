@@ -7,20 +7,9 @@ the taxonomy when categories are missing.
 
 from __future__ import annotations
 
-import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential
-
 from ..config import Source
-from .base import USER_AGENT, FetchResult
-
-
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, max=10))
-def _get_bytes(url: str) -> bytes:
-    resp = httpx.get(
-        url, headers={"User-Agent": USER_AGENT}, timeout=30, follow_redirects=True
-    )
-    resp.raise_for_status()
-    return resp.content
+from .base import FetchResult
+from .http import _get
 
 
 def _parse_ical(raw: bytes) -> list[dict]:
@@ -48,7 +37,7 @@ def _parse_ical(raw: bytes) -> list[dict]:
     return events
 
 
-def _parse_rss(raw: bytes) -> list[dict]:
+def _parse_rss(raw: str) -> list[dict]:
     import feedparser
 
     parsed = feedparser.parse(raw)
@@ -66,10 +55,10 @@ def _parse_rss(raw: bytes) -> list[dict]:
 
 
 def fetch_feed(source: Source) -> FetchResult:
-    raw = _get_bytes(source.fetch.url)
+    raw = _get(source.fetch.url)
     head = raw[:512].lstrip().lower()
-    if b"begin:vcalendar" in head or source.fetch.url.endswith(".ics"):
-        events = _parse_ical(raw)
+    if "begin:vcalendar" in head or source.fetch.url.endswith(".ics"):
+        events = _parse_ical(raw.encode())
     else:
         events = _parse_rss(raw)
     return FetchResult(

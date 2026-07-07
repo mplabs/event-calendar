@@ -21,9 +21,6 @@ class Settings:
     model_extract: str = os.environ.get(
         "LLM_MODEL_EXTRACT", "google/gemini-2.0-flash-001"
     )
-    model_classify: str = os.environ.get("LLM_MODEL_CLASSIFY", "") or os.environ.get(
-        "LLM_MODEL_EXTRACT", "google/gemini-2.0-flash-001"
-    )
     app_url: str = os.environ.get("OPENROUTER_APP_URL", "")
     app_name: str = os.environ.get("OPENROUTER_APP_NAME", "Jena Event Aggregator")
 
@@ -45,7 +42,6 @@ class Source:
     region: str
     fetch: FetchConfig
     enabled: bool = False
-    schedule: str | None = None
     legal: dict = field(default_factory=dict)
 
 
@@ -61,7 +57,6 @@ def load_sources(path: Path = SOURCES_PATH) -> list[Source]:
                 region=raw["region"],
                 fetch=fetch,
                 enabled=raw.get("enabled", False),
-                schedule=raw.get("schedule"),
                 legal=raw.get("legal", {}),
             )
         )

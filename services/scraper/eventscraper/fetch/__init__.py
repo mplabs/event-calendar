@@ -20,4 +20,3 @@ def fetch(source: Source) -> FetchResult:
     raise NotImplementedError(f"fetch type not implemented yet: {kind}")
 
 
-__all__ = ["fetch", "FetchResult", "fetch_feed", "fetch_html", "fetch_sitemap"]

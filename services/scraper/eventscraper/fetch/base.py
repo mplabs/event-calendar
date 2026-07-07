@@ -28,5 +28,5 @@ class FetchResult:
 
     def __post_init__(self) -> None:
         if not self.content_hash:
-            basis = self.content or repr(self.structured)
+            basis = self.content or str(len(self.structured))
             self.content_hash = hashlib.sha256(basis.encode("utf-8")).hexdigest()
