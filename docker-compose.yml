@@ -61,7 +61,7 @@ services:
       - ./sources.yaml:/app/sources.yaml:ro
       - raw_cache:/app/raw_cache
     entrypoint: ["python", "-m", "eventscraper.cli"]
-    command: ["--help"]
+    command: ["run-all"]
 
   # TypeScript / Next.js app (API + UI) — Phase 2, see services/web/README.md.
   # web:
