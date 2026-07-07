@@ -43,14 +43,6 @@ jobs:
             ./ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ vars.VPS_DEPLOY_PATH }}/
 
       - name: Build & run
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            set -e
-            cd ${{ vars.VPS_DEPLOY_PATH }}
-            docker compose build scraper
-            docker compose run --rm migrate
-            docker compose run --rm scraper run-all
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "cd ${{ vars.VPS_DEPLOY_PATH }} && docker compose build scraper && docker compose run --rm migrate && docker compose run --rm scraper run-all"
