@@ -50,15 +50,16 @@ services:
     entrypoint: ["python", "-m", "eventscraper.cli"]
     command: ["run-all"]
 
-  # TypeScript / Next.js app (API + UI) — Phase 2, see services/web/README.md.
-  # web:
-  #   build: ./services/web
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #   env_file: .env
-  #   ports:
-  #     - "3000:3000"
+  # TypeScript / Next.js app (API + UI).
+  web:
+    build: ./services/web
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
 
 volumes:
   pgdata:
