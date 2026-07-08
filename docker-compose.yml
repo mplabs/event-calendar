@@ -57,9 +57,24 @@ services:
       db:
         condition: service_healthy
     env_file: .env
-    ports:
-      - "3000:3000"
     restart: unless-stopped
+    networks:
+      - default
+      - webproxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=webproxy"
+      - "traefik.http.routers.events.rule=Host(`${EVENTS_DOMAIN:?set EVENTS_DOMAIN in .env}`)"
+      - "traefik.http.routers.events.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}"
+      - "traefik.http.routers.events.tls=true"
+      - "traefik.http.routers.events.tls.certresolver=${TRAEFIK_CERTRESOLVER:-dns}"
+      - "traefik.http.routers.events.tls.domains[0].main=${EVENTS_DOMAIN}"
+      - "traefik.http.routers.events.tls.domains[0].sans=${EVENTS_DOMAIN}"
+      - "traefik.http.services.events.loadbalancer.server.port=3000"
+
+networks:
+  webproxy:
+    external: true
 
 volumes:
   pgdata:
