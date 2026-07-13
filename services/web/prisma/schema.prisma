@@ -4,7 +4,9 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Placeholder only — the real URL is built from POSTGRES_* in src/lib/db.ts
+  // and injected via PrismaClient's datasources option at runtime.
+  url      = "postgresql://placeholder"
 }
 
 model Source {
