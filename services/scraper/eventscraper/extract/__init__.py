@@ -11,9 +11,9 @@ def extract(result: FetchResult, client: LLMClient | None = None) -> list[Extrac
     """Extract events from a fetch result.
 
     kind="events"  -> pre-structured (feed); skip the LLM.
-    kind="pages"   -> list of {url, content} dicts (sitemap crawl); one LLM
-                      call per page, url propagated onto ExtractedEvent.
     kind="text"    -> single HTML/text blob; one LLM call.
+
+    kind="pages" (sitemap crawl) is handled in pipeline._run_pages, not here.
     """
     if result.kind == "events":
         return [
@@ -22,17 +22,6 @@ def extract(result: FetchResult, client: LLMClient | None = None) -> list[Extrac
         ]
 
     client = client or get_default_client()
-
-    if result.kind == "pages":
-        events: list[ExtractedEvent] = []
-        for page in result.structured:
-            page_events = client.extract_events(page["content"])
-            for ev in page_events:
-                if not ev.url:
-                    ev.url = page["url"]
-            events.extend(page_events)
-        return events
-
     return client.extract_events(result.content)
 
 

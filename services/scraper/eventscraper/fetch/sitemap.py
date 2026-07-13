@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import logging
 import xml.etree.ElementTree as ET
-from time import sleep
 
 from ..config import Source
 from .base import FetchResult
@@ -48,8 +47,9 @@ def _parse_event_urls(sitemap_xml: str) -> list[dict]:
 
 
 def fetch_sitemap(source: Source, max_pages: int = 200) -> FetchResult:
-    """Fetch all event pages discovered via the sitemap and return as structured list."""
-    # Step 1: get sitemap index
+    """Discover event page URLs via the sitemap. Content is NOT fetched here — the
+    pipeline fetches each page with fetch_page() so extract+store can run per URL
+    and progress survives a restart mid-crawl."""
     index_xml = _get(source.fetch.sitemap_url)
     event_sitemap_url = _find_event_sitemap(index_xml, source.fetch.sitemap_filter)
     if not event_sitemap_url:
@@ -58,33 +58,19 @@ def fetch_sitemap(source: Source, max_pages: int = 200) -> FetchResult:
             f"{source.fetch.sitemap_url}"
         )
 
-    # Step 2: get event URL list
     event_sitemap_xml = _get(event_sitemap_url)
-    entries = _parse_event_urls(event_sitemap_xml)
+    entries = _parse_event_urls(event_sitemap_xml)[:max_pages]
     log.info("sitemap: %d event URLs discovered", len(entries))
 
-    # Step 3: fetch each event detail page
-    rate_limit = float(source.legal.get("rate_limit_s", 3))
-    structured: list[dict] = []
-    for i, entry in enumerate(entries[:max_pages]):
-        try:
-            html = _get(entry["url"])
-            text = clean_html(html, source.fetch.content_selector)
-            structured.append({
-                "url": entry["url"],
-                "lastmod": entry["lastmod"],
-                "content": text,
-            })
-        except Exception as exc:
-            log.warning("failed to fetch %s: %s", entry["url"], exc)
-        if i < len(entries) - 1:
-            sleep(rate_limit)
-
-    log.info("sitemap: fetched %d/%d event pages", len(structured), len(entries))
     return FetchResult(
         source_id=source.id,
         url=source.fetch.sitemap_url,
         content="",
         kind="pages",
-        structured=structured,
+        structured=entries,  # [{url, lastmod}] — no content yet
     )
+
+
+def fetch_page(url: str, content_selector: str | None = None) -> str:
+    """Fetch and clean one event detail page."""
+    return clean_html(_get(url), content_selector)
