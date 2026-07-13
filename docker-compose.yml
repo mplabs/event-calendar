@@ -9,6 +9,8 @@
 services:
   db:
     image: postgres:16
+    networks:
+      - backend
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -24,6 +26,8 @@ services:
   # One-shot: apply SQL migrations in db/migrations in lexical order.
   migrate:
     image: postgres:16
+    networks:
+      - backend
     depends_on:
       db:
         condition: service_healthy
@@ -41,6 +45,9 @@ services:
   scraper:
     build: ./services/scraper
     profiles: ["scrape"]
+    networks:
+      - backend       # reach db
+      - default       # egress: event page fetches + OpenRouter
     depends_on:
       db:
         condition: service_healthy
@@ -62,8 +69,8 @@ services:
     env_file: .env
     restart: unless-stopped
     networks:
-      - default
-      - webproxy
+      - backend       # reach db
+      - webproxy      # Traefik ingress
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=webproxy"
@@ -76,6 +83,8 @@ services:
       - "traefik.http.services.events.loadbalancer.server.port=3000"
 
 networks:
+  backend:
+    internal: true    # no route to the outside world; db is only reachable in-stack
   webproxy:
     external: true
 
