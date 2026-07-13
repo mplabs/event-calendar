@@ -8,6 +8,7 @@ import psycopg
 from psycopg.rows import dict_row
 
 import os
+from urllib.parse import quote_plus
 
 from .config import Source
 from .models import Event
@@ -15,11 +16,16 @@ from .models import Event
 log = logging.getLogger(__name__)
 
 
+def _db_url() -> str:
+    u = os.environ["POSTGRES_USER"]
+    p = os.environ["POSTGRES_PASSWORD"]
+    d = os.environ["POSTGRES_DB"]
+    h = os.environ.get("POSTGRES_HOST", "db")
+    return f"postgresql://{quote_plus(u)}:{quote_plus(p)}@{h}:5432/{quote_plus(d)}"
+
+
 def connect() -> psycopg.Connection:
-    url = os.environ.get("DATABASE_URL")
-    if not url:
-        raise RuntimeError("DATABASE_URL is not set")
-    return psycopg.connect(url, row_factory=dict_row)
+    return psycopg.connect(_db_url(), row_factory=dict_row)
 
 
 def upsert_source(conn: psycopg.Connection, source: Source) -> None:
