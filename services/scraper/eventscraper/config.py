@@ -11,9 +11,20 @@ import yaml
 SOURCES_PATH = Path(os.environ.get("SOURCES_PATH", "sources.yaml"))
 
 
+def _database_url() -> str:
+    if url := os.environ.get("DATABASE_URL"):
+        return url
+    from urllib.parse import quote_plus
+    user = os.environ.get("POSTGRES_USER", "")
+    password = os.environ.get("POSTGRES_PASSWORD", "")
+    db = os.environ.get("POSTGRES_DB", "")
+    host = os.environ.get("POSTGRES_HOST", "db")
+    return f"postgresql://{quote_plus(user)}:{quote_plus(password)}@{host}:5432/{quote_plus(db)}"
+
+
 @dataclass
 class Settings:
-    database_url: str = os.environ.get("DATABASE_URL", "")
+    database_url: str = field(default_factory=_database_url)
     openrouter_api_key: str = os.environ.get("OPENROUTER_API_KEY", "")
     openrouter_base_url: str = os.environ.get(
         "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
