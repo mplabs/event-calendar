@@ -38,8 +38,11 @@ services:
     entrypoint: ["bash", "/migrate.sh"]
 
   # Python ingestion service. `command` is passed to the eventscraper CLI.
+  # In the "scrape" profile so `docker compose up -d` does NOT start it —
+  # run it on a schedule instead (host cron: docker compose run --rm scraper run-all).
   scraper:
     build: ./services/scraper
+    profiles: ["scrape"]
     depends_on:
       db:
         condition: service_healthy

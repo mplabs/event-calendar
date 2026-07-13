@@ -62,26 +62,26 @@ def _run_pages(fetched: FetchResult, source: Source, dry_run: bool) -> RunResult
     from time import sleep
 
     from .extract.llm import get_default_client
-    from .fetch.sitemap import fetch_page
+    from .fetch.http import _get, clean_html
     from .store import store
 
     client = get_default_client()
     rate_limit = float(source.legal.get("rate_limit_s", 3))
     total_extracted = total_normalized = total_stored = 0
 
-    for i, entry in enumerate(fetched.structured):
+    for i, url in enumerate(fetched.structured):
         if i:
             sleep(rate_limit)  # polite crawl delay between page fetches
         try:
-            content = fetch_page(entry["url"], source.fetch.content_selector)
+            content = clean_html(_get(url), source.fetch.content_selector)
         except Exception as exc:  # skip a bad page, keep crawling
-            log.warning("failed to fetch %s: %s", entry["url"], exc)
+            log.warning("failed to fetch %s: %s", url, exc)
             continue
 
         page_events = client.extract_events(content)
         for ev in page_events:
             if not ev.url:
-                ev.url = entry["url"]
+                ev.url = url
 
         normed = [n for raw in page_events if (n := normalize(raw, source)) is not None]
         deduped = dedupe(normed)

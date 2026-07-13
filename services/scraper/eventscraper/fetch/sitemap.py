@@ -6,8 +6,8 @@ where the listing page is JS-rendered but individual event pages are static HTML
 
 Flow:
   1. Fetch the sitemap index to find the event-specific sub-sitemap.
-  2. Parse the sub-sitemap to get all event page URLs + lastmod dates.
-  3. Fetch each event detail page, clean to text, and return as structured items.
+  2. Parse the sub-sitemap to get all event page URLs.
+  3. The pipeline fetches each detail page (see pipeline._run_pages).
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ import xml.etree.ElementTree as ET
 
 from ..config import Source
 from .base import FetchResult
-from .http import _get, clean_html
+from .http import _get
 
 log = logging.getLogger(__name__)
 
@@ -34,16 +34,14 @@ def _find_event_sitemap(index_xml: str, filter_fragment: str) -> str | None:
     return None
 
 
-def _parse_event_urls(sitemap_xml: str) -> list[dict]:
-    """Return [{url, lastmod}] from an event sub-sitemap."""
+def _parse_event_urls(sitemap_xml: str) -> list[str]:
+    """Return event page URLs from an event sub-sitemap."""
     root = ET.fromstring(sitemap_xml)
-    entries = []
-    for url_el in root.findall("sm:url", _NS):
-        loc = url_el.findtext("sm:loc", namespaces=_NS)
-        lastmod = url_el.findtext("sm:lastmod", namespaces=_NS)
-        if loc:
-            entries.append({"url": loc, "lastmod": lastmod or ""})
-    return entries
+    return [
+        loc
+        for url_el in root.findall("sm:url", _NS)
+        if (loc := url_el.findtext("sm:loc", namespaces=_NS))
+    ]
 
 
 def fetch_sitemap(source: Source, max_pages: int = 200) -> FetchResult:
@@ -67,10 +65,5 @@ def fetch_sitemap(source: Source, max_pages: int = 200) -> FetchResult:
         url=source.fetch.sitemap_url,
         content="",
         kind="pages",
-        structured=entries,  # [{url, lastmod}] — no content yet
+        structured=entries,  # list of event page URLs — fetched per-URL by the pipeline
     )
-
-
-def fetch_page(url: str, content_selector: str | None = None) -> str:
-    """Fetch and clean one event detail page."""
-    return clean_html(_get(url), content_selector)
