@@ -53,13 +53,15 @@ jobs:
       - run: npm ci
         working-directory: services/web
 
-      - name: Prisma db pull & generate
+      # db pull rewrites the datasource block (url + comments), so keep our
+      # committed header (placeholder url) and only refresh the models from the DB.
+      - name: Regenerate models from DB
         working-directory: services/web
-        env:
-          DATABASE_URL: postgresql://events:events@localhost:5432/events
         run: |
-          npx prisma db pull
-          npx prisma generate
+          awk '/^model /{exit} {print}' prisma/schema.prisma > /tmp/head.prisma
+          npx prisma db pull --url "postgresql://events:events@localhost:5432/events"
+          awk 'f||/^model /{f=1} f' prisma/schema.prisma > /tmp/models.prisma
+          cat /tmp/head.prisma /tmp/models.prisma > prisma/schema.prisma
 
       - name: Fail on schema drift
         run: git diff --exit-code services/web/prisma/schema.prisma

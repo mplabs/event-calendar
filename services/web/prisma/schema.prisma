@@ -42,11 +42,10 @@ model Event {
   endsAt       DateTime?     @map("ends_at") @db.Timestamptz(6)
   allDay       Boolean       @default(false) @map("all_day")
   venueId      String?       @map("venue_id") @db.Uuid
-  venue        Venue?        @relation(fields: [venueId], references: [id])
-  categories   String[]
-  tags         String[]
-  priceMin     Decimal?      @map("price_min")
-  priceMax     Decimal?      @map("price_max")
+  categories   String[]      @default([])
+  tags         String[]      @default([])
+  priceMin     Decimal?      @map("price_min") @db.Decimal
+  priceMax     Decimal?      @map("price_max") @db.Decimal
   currency     String        @default("EUR")
   url          String?
   ticketUrl    String?       @map("ticket_url")
@@ -57,18 +56,22 @@ model Event {
   dedupeHash   String        @unique @map("dedupe_hash")
   firstSeenAt  DateTime      @default(now()) @map("first_seen_at") @db.Timestamptz(6)
   lastSeenAt   DateTime      @default(now()) @map("last_seen_at") @db.Timestamptz(6)
+  venue        Venue?        @relation(fields: [venueId], references: [id], onUpdate: NoAction)
   eventSources EventSource[]
 
+  @@index([categories], type: Gin)
+  @@index([startsAt])
+  @@index([title(ops: raw("gin_trgm_ops"))], map: "event_title_trgm_idx", type: Gin)
   @@map("event")
 }
 
 model EventSource {
   eventId     String   @map("event_id") @db.Uuid
   sourceId    String   @map("source_id")
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  source      Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
   sourceUrl   String?  @map("source_url")
   extractedAt DateTime @default(now()) @map("extracted_at") @db.Timestamptz(6)
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  source      Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([eventId, sourceId])
   @@map("event_source")
