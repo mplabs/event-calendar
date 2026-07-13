@@ -7,16 +7,19 @@ import logging
 import psycopg
 from psycopg.rows import dict_row
 
-from .config import Source, settings
+import os
+
+from .config import Source
 from .models import Event
 
 log = logging.getLogger(__name__)
 
 
 def connect() -> psycopg.Connection:
-    if not settings.database_url:
+    url = os.environ.get("DATABASE_URL")
+    if not url:
         raise RuntimeError("DATABASE_URL is not set")
-    return psycopg.connect(settings.database_url, row_factory=dict_row)
+    return psycopg.connect(url, row_factory=dict_row)
 
 
 def upsert_source(conn: psycopg.Connection, source: Source) -> None:

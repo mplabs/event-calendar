@@ -13,7 +13,6 @@ SOURCES_PATH = Path(os.environ.get("SOURCES_PATH", "sources.yaml"))
 
 @dataclass
 class Settings:
-    database_url: str = os.environ.get("DATABASE_URL", "")
     openrouter_api_key: str = os.environ.get("OPENROUTER_API_KEY", "")
     openrouter_base_url: str = os.environ.get(
         "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
