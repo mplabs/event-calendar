@@ -1,14 +1,9 @@
-"""Provider-agnostic LLM client. Default implementation talks to OpenRouter.
-
-Swap providers by implementing the LLMClient protocol; nothing else in the
-pipeline depends on OpenRouter directly.
-"""
+"""LLM client that talks to OpenRouter."""
 
 from __future__ import annotations
 
 import json
 import logging
-from typing import Protocol
 
 import httpx
 from pydantic import ValidationError
@@ -22,10 +17,6 @@ log = logging.getLogger(__name__)
 
 # Keep token cost bounded; chunk longer pages upstream if needed.
 MAX_CONTENT_CHARS = 24_000
-
-
-class LLMClient(Protocol):
-    def extract_events(self, content: str) -> list[ExtractedEvent]: ...
 
 
 class OpenRouterClient:
@@ -95,5 +86,5 @@ class OpenRouterClient:
         return events
 
 
-def get_default_client() -> LLMClient:
+def get_default_client() -> OpenRouterClient:
     return OpenRouterClient()

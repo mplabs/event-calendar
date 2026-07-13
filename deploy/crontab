@@ -1,0 +1,2 @@
+# install on the VPS with: crontab deploy/crontab
+30 3 * * * cd /home/deploy/sites/events.dronechronicles.de && docker compose run --rm scraper run-all >> scrape.log 2>&1

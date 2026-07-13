@@ -7,7 +7,7 @@ where the listing page is JS-rendered but individual event pages are static HTML
 Flow:
   1. Fetch the sitemap index to find the event-specific sub-sitemap.
   2. Parse the sub-sitemap to get all event page URLs.
-  3. The pipeline fetches each detail page (see pipeline._run_pages).
+  3. The pipeline fetches each detail page (see pipeline.run_source).
 """
 
 from __future__ import annotations

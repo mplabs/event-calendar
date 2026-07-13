@@ -48,8 +48,8 @@ def _upsert_venue(conn: psycopg.Connection, event: Event) -> str | None:
         return None
     row = conn.execute(
         """
-        INSERT INTO venue (name, address, lat, lng, region, website)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO venue (name, address, region)
+        VALUES (%s, %s, %s)
         ON CONFLICT (name, region) DO UPDATE
           SET address = COALESCE(EXCLUDED.address, venue.address)
         RETURNING id
@@ -57,10 +57,7 @@ def _upsert_venue(conn: psycopg.Connection, event: Event) -> str | None:
         (
             event.venue.name,
             event.venue.address,
-            event.venue.lat,
-            event.venue.lng,
             event.venue.region,
-            event.venue.website,
         ),
     ).fetchone()
     return row["id"] if row else None
@@ -100,14 +97,13 @@ def upsert_event(conn: psycopg.Connection, event: Event, source: Source) -> str:
 
     conn.execute(
         """
-        INSERT INTO event_source (event_id, source_id, source_url, raw_hash, extracted_at)
-        VALUES (%s, %s, %s, %s, now())
+        INSERT INTO event_source (event_id, source_id, source_url, extracted_at)
+        VALUES (%s, %s, %s, now())
         ON CONFLICT (event_id, source_id) DO UPDATE
           SET source_url = EXCLUDED.source_url,
-              raw_hash = EXCLUDED.raw_hash,
               extracted_at = now()
         """,
-        (event_id, source.id, event.url, event.dedupe_hash),
+        (event_id, source.id, event.url),
     )
     return event_id
 

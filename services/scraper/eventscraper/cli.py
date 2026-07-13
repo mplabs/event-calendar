@@ -34,7 +34,7 @@ def _run_one(source, dry_run: bool) -> None:
     print(
         f"{result.source_id}: fetched={result.fetched} "
         f"normalized={result.normalized} deduped={result.deduped} "
-        f"stored={result.stored} hash={result.content_hash[:12]}"
+        f"stored={result.stored}"
     )
 
 

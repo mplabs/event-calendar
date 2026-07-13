@@ -28,7 +28,6 @@ sources:
       sitemap_filter: ndsdestinationdataevent
       # CSS selector to narrow LLM input on each event detail page.
       content_selector: main
-    schedule: "0 6 * * *"
     legal:
       robots_ok: true         # robots.txt disallows /fileadmin, /uploads only
       feed: false
@@ -48,7 +47,6 @@ sources:
       url: https://www.c-keller.de/index.php?article_id=513
       # col2_content contains the concert list with #cal date + #textumschluss title blocks.
       content_selector: "#col2_content"
-    schedule: "0 7 * * *"
     legal:
       robots_ok: true         # No robots.txt; treating as unrestricted
       feed: false

@@ -1,3 +1,4 @@
+// Generated from db/migrations via `prisma db pull`. Do NOT hand-edit — CI (schema-drift) fails on drift.
 generator client {
   provider = "prisma-client-js"
 }
@@ -15,8 +16,6 @@ model Source {
   region       String
   enabled      Boolean       @default(false)
   lastRunAt    DateTime?     @map("last_run_at") @db.Timestamptz(6)
-  lastOkAt     DateTime?     @map("last_ok_at") @db.Timestamptz(6)
-  failCount    Int           @default(0) @map("fail_count")
   createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
   eventSources EventSource[]
 
@@ -27,10 +26,7 @@ model Venue {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String
   address   String?
-  lat       Float?
-  lng       Float?
   region    String?
-  website   String?
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   events    Event[]
 
@@ -72,7 +68,6 @@ model EventSource {
   event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   source      Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
   sourceUrl   String?  @map("source_url")
-  rawHash     String?  @map("raw_hash")
   extractedAt DateTime @default(now()) @map("extracted_at") @db.Timestamptz(6)
 
   @@id([eventId, sourceId])

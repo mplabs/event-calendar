@@ -52,10 +52,7 @@ class ExtractedEvent(BaseModel):
 class Venue(BaseModel):
     name: str
     address: str | None = None
-    lat: float | None = None
-    lng: float | None = None
     region: str | None = None
-    website: str | None = None
 
 
 class Event(BaseModel):

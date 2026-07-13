@@ -18,8 +18,54 @@ jobs:
       - run: pytest tests/ -q
         working-directory: services/scraper
 
+  schema-drift:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: events
+          POSTGRES_PASSWORD: events
+          POSTGRES_DB: events
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U events"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply migrations
+        env:
+          PGPASSWORD: events
+        run: |
+          for f in db/migrations/*.sql; do
+            echo "applying $f"
+            psql -h localhost -U events -d events -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm ci
+        working-directory: services/web
+
+      - name: Prisma db pull & generate
+        working-directory: services/web
+        env:
+          DATABASE_URL: postgresql://events:events@localhost:5432/events
+        run: |
+          npx prisma db pull
+          npx prisma generate
+
+      - name: Fail on schema drift
+        run: git diff --exit-code services/web/prisma/schema.prisma
+
   deploy:
-    needs: test
+    needs: [test, schema-drift]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
